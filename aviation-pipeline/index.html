@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlightOps — Aviation Intelligence Pipeline</title>
+    <style>
+        /* General Reset & Premium Theme Base */
+        body { 
+            font-family: 'Inter', 'Segoe UI', sans-serif; 
+            background-color: #07090e; 
+            color: #f3f4f6; 
+            line-height: 1.6; 
+            margin: 0; 
+            padding: 0;
+            background-image: radial-gradient(circle at 80% 20%, rgba(255, 87, 34, 0.15) 0%, transparent 50%),
+                              radial-gradient(circle at 10% 70%, rgba(52, 152, 219, 0.08) 0%, transparent 50%);
+            background-attachment: fixed;
+        }
+
+        .container { max-width: 1100px; margin: 0 auto; padding: 60px 20px; position: relative; z-index: 1; }
+
+        #starfield {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Typography & Header styling matching your image */
+        header { text-align: center; margin-bottom: 80px; position: relative; }
+        
+        .badge {
+            background: rgba(255, 87, 34, 0.1);
+            border: 1px solid rgba(255, 87, 34, 0.3);
+            color: #ff5722;
+            padding: 6px 16px;
+            border-radius: 100px;
+            font-size: 0.85em;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+
+        h1 { 
+            font-size: 3.2em; 
+            font-weight: 800; 
+            letter-spacing: -1px;
+            margin: 0 0 20px 0; 
+            background: linear-gradient(135deg, #ffffff 0%, #a1a8b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        header p { color: #8a93a6; font-size: 1.2em; max-width: 650px; margin: 0 auto 35px auto; }
+
+        .btn-primary { 
+            display: inline-block; 
+            background: #ff5722; 
+            color: #ffffff; 
+            padding: 14px 32px; 
+            font-weight: 700; 
+            text-decoration: none; 
+            border-radius: 100px; 
+            box-shadow: 0 8px 24px rgba(255, 87, 34, 0.3);
+            transition: all 0.3s ease;
+            font-size: 0.95em;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(255, 87, 34, 0.5); }
+
+        /* Premium Bento-Grid Visual Layout Cards */
+        h2 { font-size: 1.8em; font-weight: 700; margin-top: 0; margin-bottom: 15px; color: #ffffff; display: flex; align-items: center; gap: 10px; }
+        h2 span { font-size: 0.5em; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 4px 10px; border-radius: 4px; color: #8a93a6; text-transform: uppercase; letter-spacing: 1px; }
+
+        .card-grid { display: grid; grid-template-columns: 1fr; gap: 30px; margin-bottom: 40px; }
+        .two-col { grid-template-columns: 1.2fr 1fr; }
+
+        .card { 
+            background: rgba(17, 22, 30, 0.65); 
+            border: 1px solid rgba(255, 255, 255, 0.05); 
+            backdrop-filter: blur(12px);
+            padding: 40px; 
+            border-radius: 20px; 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .card p { color: #8a93a6; font-size: 1em; margin-bottom: 30px; }
+
+        /* Premium Form Styling */
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-weight: 600; margin-bottom: 8px; color: #a1a8b8; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; }
+        input, select { 
+            width: 100%; 
+            padding: 12px 16px; 
+            background: #0d1117; 
+            border: 1px solid rgba(255,255,255,0.08); 
+            color: #fff; 
+            border-radius: 10px; 
+            box-sizing: border-box; 
+            font-size: 0.95em;
+            transition: all 0.3s ease;
+        }
+        input:focus, select:focus { border-color: #ff5722; outline: none; background: #121821; box-shadow: 0 0 0 3px rgba(255, 87, 34, 0.15); }
+        .form-submit { background: linear-gradient(135deg, #ff5722 0%, #e64a19 100%); color: #fff; border: none; padding: 14px; font-weight: 700; width: 100%; border-radius: 100px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; margin-top: 15px; box-shadow: 0 4px 12px rgba(255, 87, 34, 0.2); }
+
+        /* Media Display / Code blocks */
+        img { width: 100%; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); margin-top: 10px; }
+        pre { background: #07090e; padding: 20px; border-radius: 12px; overflow-x: auto; color: #4af626; font-family: 'Consolas', monospace; font-size: 0.9em; border: 1px solid rgba(255,255,255,0.03); }
+
+        /* Route Validation Error State */
+        .route-error {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 59, 48, 0.1);
+            border: 1px solid rgba(255, 59, 48, 0.35);
+            color: #ff6b5e;
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+        .route-error.visible { display: flex; }
+        select.input-error { border-color: #ff3b30 !important; box-shadow: 0 0 0 3px rgba(255, 59, 48, 0.15) !important; }
+
+        .dispatch-status {
+            display: none;
+            margin-top: 15px;
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 0.9em;
+            font-weight: 600;
+            text-align: center;
+        }
+        .dispatch-status.success { display: block; background: rgba(76, 217, 100, 0.1); border: 1px solid rgba(76, 217, 100, 0.35); color: #6fe08a; }
+
+        @media (max-width: 768px) { .two-col { grid-template-columns: 1fr; } h1 { font-size: 2.4em; } }
+    </style>
+    <script src="https://jsdelivr.net"></script>
+</head>
+<body>
+
+    <canvas id="starfield"></canvas>
+
+    <div class="container">
+        <header>
+            <div class="badge">Enterprise Pipeline Case Study</div>
+            <h1>FlightOps Architecture</h1>
+            <p>An end-to-end telemetry and business intelligence ecosystem managing user input validation, structured database layers, and relational analytical tracking.</p>
+            <a href="https://www.loom.com/share/10df052db20145d98e038cb88187f7aa" target="_blank" class="btn-primary">▶️ System Video Walkthrough</a>
+        </header>
+
+        <!-- LAYOUT SECTION 1: INTERACTIVE FORM APP -->
+        <div class="card-grid two-col">
+            <div class="card">
+                <h2>1. Front-End Log Dispatcher <span>Low-Code Interface</span></h2>
+                <p>A high-fidelity telemetry input module designed to simulate production Power Apps validation logic. Implements complex relational option arrays and client-side system parameter boundaries to capture verified flight operations logs dynamically.</p>
+                <img src="form-screenshot.png" alt="Operational Telemetry Form View" style="display:none; /* fallback if needed */">
+                
+                <form id="opsForm">
+                    <div class="form-group">
+                        <label>Flight Registry Identifier</label>
+                        <input type="text" id="flightNum" placeholder="e.g., FA131" required pattern="^[A-Z]{2}\d{3}$" title="Two letters followed by three numbers">
+                    </div>
+                    <div class="form-group">
+                        <label>Aircraft Resource Group</label>
+                        <select id="aircraft" required>
+                            <option value="">-- Resolve Fleet Asset --</option>
+                            <option value="Boeing 737-800">Boeing 737-800</option>
+                            <option value="Airbus A320">Airbus A320</option>
+                            <option value="Embraer E190">Embraer E190</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Commanding Officer Assignment</label>
+                        <select id="pilot" required>
+                            <option value="">-- Authenticate Pilot Credentials --</option>
+                            <option value="Sipho Khumalo">Sipho Khumalo</option>
+                            <option value="Sarah Smith">Sarah Smith</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Operational Routing (DEP ➡️ ARR)</label>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <select id="dep" required>
+                                <option value="">Origin</option>
+                                <option value="JNB">JNB</option>
+                                <option value="CPT">CPT</option>
+                                <option value="DUR">DUR</option>
+                            </select>
+                            <select id="arr" required>
+                                <option value="">Destination</option>
+                                <option value="JNB">JNB</option>
+                                <option value="CPT">CPT</option>
+                                <option value="DUR">DUR</option>
+                            </select>
+                        </div>
+                        <div id="routeError" class="route-error">⚠️ Origin and destination cannot be the same airport.</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Fuel Mass Volume (Liters)</label>
+                        <input type="number" id="fuel" placeholder="e.g., 4200" required min="1000" max="15000">
+                    </div>
+                    <button type="submit" class="form-submit">Dispatch to Data Queue</button>
+                    <div id="dispatchStatus" class="dispatch-status"></div>
+                </form>
+            </div>
+
+            <!-- LAYOUT SECTION 2: BI REVEAL INSIDE THE SAME ROW -->
+            <div class="card" style="display: flex; flex-direction: column;">
+                <div>
+                    <h2>2. Visual Intelligence Layout <span>Power BI Layer</span></h2>
+                    <p style="margin-bottom: 15px;">The core reporting canvas utilizing advanced relational Star Schema mapping models. Built using high-contrast interface design rules, responsive cross-filtering matrices, and explicit structural telemetry indicators to optimize execution speed and data density.</p>
+                </div>
+                <img src="powerbi-screenshot.png" alt="Power BI Analytical Interface View" style="margin-top: 0;">
+                <img src="pie-chart.jpg" alt="Aircraft Model Distribution by Arrival Airport">
+            </div>
+        </div>
+
+        <!-- LAYOUT SECTION 3: BACKEND ENGINE CODE -->
+        <div class="card">
+            <h2>3. Relational Schema Architecture <span>SQL Backend</span></h2>
+            <p>Architected cleanly from scratch using structured table dependencies. Leverages key indexing configurations and multi-table mapping components to query database tables rapidly without operational server lag.</p>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start;">
+                <pre style="margin: 0;">
+SELECT 
+    p.First_Name || ' ' || p.Last_Name AS Pilot_Name,
+    COUNT(f.Flight_ID) AS Total_Flights_Flown,
+    SUM(f.Delay_Minutes) AS Total_Delay_Minutes
+FROM Flights f
+JOIN Pilots p ON f.Pilot_ID = p.Pilot_ID
+GROUP BY Pilot_Name
+ORDER BY Total_Delay_Minutes DESC;
+                </pre>
+                <img src="sqlite-screenshot.png" alt="SQLite Query Execution and Results View" style="margin-top: 0;">
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Animated Starfield Background
+        (function () {
+            const canvas = document.getElementById('starfield');
+            const ctx = canvas.getContext('2d');
+            let stars = [];
+            let width, height;
+
+            function resize() {
+                width = canvas.width = window.innerWidth;
+                height = canvas.height = window.innerHeight;
+                initStars();
+            }
+
+            function initStars() {
+                const count = Math.floor((width * height) / 3800);
+                stars = [];
+                for (let i = 0; i < count; i++) {
+                    stars.push({
+                        x: Math.random() * width,
+                        y: Math.random() * height,
+                        radius: Math.random() * 1.3 + 0.3,
+                        baseAlpha: Math.random() * 0.6 + 0.3,
+                        twinkleSpeed: Math.random() * 0.006 + 0.0015,
+                        twinklePhase: Math.random() * Math.PI * 2,
+                        driftSpeed: Math.random() * 0.05 + 0.01,
+                        hue: Math.random() > 0.85 ? 20 : 0 // occasional warm star to match orange accent
+                    });
+                }
+            }
+
+            function draw(time) {
+                ctx.clearRect(0, 0, width, height);
+                for (const star of stars) {
+                    const twinkle = Math.sin(time * star.twinkleSpeed + star.twinklePhase) * 0.35 + 0.65;
+                    const alpha = star.baseAlpha * twinkle;
+                    ctx.beginPath();
+                    ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = star.hue
+                        ? `rgba(255, 183, 133, ${alpha})`
+                        : `rgba(255, 255, 255, ${alpha})`;
+                    ctx.fill();
+
+                    // slow downward drift, wrap around
+                    star.y += star.driftSpeed;
+                    if (star.y > height) {
+                        star.y = 0;
+                        star.x = Math.random() * width;
+                    }
+                }
+                requestAnimationFrame(draw);
+            }
+
+            window.addEventListener('resize', resize);
+            resize();
+            requestAnimationFrame(draw);
+        })();
+
+        const depSelect = document.getElementById('dep');
+        const arrSelect = document.getElementById('arr');
+        const routeError = document.getElementById('routeError');
+        const opsForm = document.getElementById('opsForm');
+        const dispatchStatus = document.getElementById('dispatchStatus');
+
+        function checkRoute() {
+            const sameAirport = depSelect.value && arrSelect.value && depSelect.value === arrSelect.value;
+            if (sameAirport) {
+                routeError.classList.add('visible');
+                depSelect.classList.add('input-error');
+                arrSelect.classList.add('input-error');
+            } else {
+                routeError.classList.remove('visible');
+                depSelect.classList.remove('input-error');
+                arrSelect.classList.remove('input-error');
+            }
+            return sameAirport;
+        }
+
+        depSelect.addEventListener('change', checkRoute);
+        arrSelect.addEventListener('change', checkRoute);
+
+        opsForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            dispatchStatus.classList.remove('success');
+            dispatchStatus.style.display = 'none';
+
+            if (checkRoute()) {
+                routeError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return;
+            }
+
+            // Passed validation — simulate dispatch to data queue
+            dispatchStatus.textContent = '✅ Log entry dispatched to data queue.';
+            dispatchStatus.classList.add('success');
+            dispatchStatus.style.display = 'block';
+        });
+    </script>
+</body>
+</html>
